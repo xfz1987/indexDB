@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Document</title>
+</head>
+<body>
+	<button id="check">检查浏览器是否支持indexDB</button>
+	<button id="connect">连接IndexDB</button>
+	<button id="add">新增数据</button>
+	<button id="delete">删除某条数据</button>
+	<button id="query">查询</button>
+	<button id="queryAll">查询所有</button>
+	<button id="update">更新数据</button>
+	<button id="clear">清空数据</button>
+	<button id="drop">删除数据库</button>
+	
+	<script src="DBUtil.js"></script>
+	<script>
+		function $(id){
+			return document.getElementById(id);
+		}
+
+		var dbUtil = new DBUtil();
+
+		//检查浏览器是否支持indexDB
+		$('check').onclick = function(){
+			alert(dbUtil.check() ? '支持' : '不支持');
+		};
+
+		//连接IndexDB
+		$('connect').onclick = function(){
+			var dbConn = dbUtil.connect({
+            	baseName: 'rj_test', //数据库名称
+            	version: 1,          //数据库版本号
+            	tables: [            //要初始化的表及字段
+            		{
+            			tableName: 'record',
+            			cells: [['source',false],['wordTxt',false],['sendError',false],['time',false]]//字段及索引，是否唯一
+            		},
+            		{
+            			tableName: 'user',
+            			cells: [['userId',true],['name',false],['dept',false]]
+            		}
+            	]
+        	}, function(result){
+        		alert('数据库连接' + (result?'成功':'失败'));
+        	});
+		};
+
+		//新增数据
+		$('add').onclick = function(){
+			var records = [
+				// {source: 'sys',wordTxt: '111111',sendError: '0', time: '20170520 11:00:00'},
+				// {source: 'cust',wordTxt: '222222',sendError: '0', time: '20170520 11:05:00'},
+				// {source: 'sys',wordTxt: '333333',sendError: '0', time: '20170522 11:00:00'},
+				// {source: 'cust',wordTxt: '444444',sendError: '0', time: '20170523 11:00:00'},
+				// {source: 'cust',wordTxt: '555555',sendError: '0', time: '20170524 11:00:00'}
+			];
+			var user = [
+				{userId: '001', name: 'xfz', dept: '产品研发中心'},
+				{userId: '002', name: 'zyc', dept: '产品研发中心'},
+				{userId: '003', name: 'yh', dept: '家居事业部'}
+			];
+			for(var i=0,len=records.length;i<len;i++){
+				//表名，要新增的obj，obj的属性要与字段名对应
+				dbUtil.add('record', records[i], function(res){
+					console.log(res);
+				});
+			}
+			for(var j=0,len=user.length;j<len;j++){
+				dbUtil.add('user',user[j], function(res){
+					console.log(res);
+				});
+			}
+		};
+
+		//删除某条数据
+		$('delete').onclick = function(){
+			//表名，要删除记录的key值也就是id值，key已经在表初始化时自动创建了，不用自己再创建
+			dbUtil.deleteRow('record', '2', function(res){
+				alert('Delete table[record] row By id[2]' + (res ? ' sucess' : ' fail'));
+			});
+			dbUtil.deleteRow('user', '2', function(res){
+				alert('Delete table[user] row By id[2]' + (res ? ' sucess' : ' fail'));
+			});
+		};
+
+		//查询
+		$('query').onclick = function(){
+			//表名，以哪个字段为查询条件，查询条件值
+			dbUtil.query('record', 'wordTxt', '333333', function(res){
+				console.log(res);
+				for(var i=0,len=res.length;i<len;i++){
+					console.log(res[i].source);
+				}
+			});
+			dbUtil.query('user', 'userId', '002', function(res){
+				console.log(res);
+				for(var i=0,len=res.length;i<len;i++){
+					console.log(res[i].name);
+				}
+			});
+			dbUtil.query('aaa', 'userId', '002', function(res){
+				console.log(res);
+			});
+		};
+
+		//查询所有
+		$('queryAll').onclick = function(){
+			//表名
+			dbUtil.queryAll('record', function(res){
+				console.log(res);
+			});
+			dbUtil.queryAll('user', function(res){
+				console.log(res);
+			});
+			dbUtil.query('bbb', 'userId', '002', function(res){
+				console.log(res);
+			});
+		};
+
+		//更新数据
+		$('update').onclick = function(){
+			//表名，以哪个字段为查询条件，查询条件值, 要更新的字段，要更新的字段值
+			// dbUtil.update('record', 'wordTxt', '333333', 'sendError', '2');
+			// dbUtil.update('user', 'userId', '003', 'dept', '运维中心');
+			
+			//表名，以哪个字段为查询条件，查询条件值, 要更新的字段及值
+			dbUtil.update('record', 'wordTxt', '333333', [{field:'sendError',value:'3'},{field:'time',value:'20170602'}]);
+		};
+
+		//清空数据表中的数据
+		$('clear').onclick = function(){
+			//要清除表名数组
+			dbUtil.clear(['record','user']);
+		};
+
+		//删除数据库
+		$('drop').onclick = function(){
+			dbUtil.drop('rj');
+		};
+
+
+
+	</script>
+</body>
+</html>
